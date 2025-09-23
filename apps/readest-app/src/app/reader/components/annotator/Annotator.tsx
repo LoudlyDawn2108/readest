@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FiSearch } from 'react-icons/fi';
 import { FiCopy } from 'react-icons/fi';
+import { FiMessageSquare } from 'react-icons/fi';
 import { PiHighlighterFill } from 'react-icons/pi';
 import { FaWikipediaW } from 'react-icons/fa';
 import { BsPencilSquare } from 'react-icons/bs';
@@ -32,6 +33,7 @@ import AnnotationPopup from './AnnotationPopup';
 import WiktionaryPopup from './WiktionaryPopup';
 import WikipediaPopup from './WikipediaPopup';
 import TranslatorPopup from './TranslatorPopup';
+import ChatbotPopup from './ChatbotPopup';
 
 const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
   const _ = useTranslation();
@@ -55,10 +57,12 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
   const [showWiktionaryPopup, setShowWiktionaryPopup] = useState(false);
   const [showWikipediaPopup, setShowWikipediaPopup] = useState(false);
   const [showDeepLPopup, setShowDeepLPopup] = useState(false);
+  const [showChatbotPopup, setShowChatbotPopup] = useState(false);
   const [trianglePosition, setTrianglePosition] = useState<Position>();
   const [annotPopupPosition, setAnnotPopupPosition] = useState<Position>();
   const [dictPopupPosition, setDictPopupPosition] = useState<Position>();
   const [translatorPopupPosition, setTranslatorPopupPosition] = useState<Position>();
+  const [chatbotPopupPosition, setChatbotPopupPosition] = useState<Position>();
   const [highlightOptionsVisible, setHighlightOptionsVisible] = useState(false);
 
   const [selectedStyle, setSelectedStyle] = useState<HighlightStyle>(
@@ -75,6 +79,8 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
   const dictPopupHeight = Math.min(300, maxHeight);
   const transPopupWidth = Math.min(480, maxWidth);
   const transPopupHeight = Math.min(265, maxHeight);
+  const chatbotPopupWidth = Math.min(500, maxWidth);
+  const chatbotPopupHeight = Math.min(600, maxHeight);
   const annotPopupWidth = Math.min(useResponsiveSize(300), maxWidth);
   const annotPopupHeight = useResponsiveSize(44);
   const androidSelectionHandlerHeight = 0;
@@ -87,6 +93,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
       setShowWiktionaryPopup(false);
       setShowWikipediaPopup(false);
       setShowDeepLPopup(false);
+      setShowChatbotPopup(false);
     }, 500),
     [],
   );
@@ -224,10 +231,18 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
         transPopupHeight,
         popupPadding,
       );
+      const chatbotPopupPos = getPopupPosition(
+        triangPos,
+        rect,
+        chatbotPopupWidth,
+        chatbotPopupHeight,
+        popupPadding,
+      );
       if (triangPos.point.x == 0 || triangPos.point.y == 0) return;
       setAnnotPopupPosition(annotPopupPos);
       setDictPopupPosition(dictPopupPos);
       setTranslatorPopupPosition(transPopupPos);
+      setChatbotPopupPosition(chatbotPopupPos);
       setTrianglePosition(triangPos);
       handleShowAnnotPopup();
     }
@@ -261,6 +276,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     setShowDeepLPopup(false);
     setShowWiktionaryPopup(false);
     setShowWikipediaPopup(false);
+    setShowChatbotPopup(false);
   };
 
   const handleCopy = () => {
@@ -391,6 +407,12 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     eventDispatcher.dispatch('tts-speak', { bookKey, range: selection.range });
   };
 
+  const handleChatbot = () => {
+    if (!selection || !selection.text) return;
+    setShowAnnotPopup(false);
+    setShowChatbotPopup(true);
+  };
+
   const handleExportMarkdown = (event: CustomEvent) => {
     const { bookKey: exportBookKey } = event.detail;
     if (bookKey !== exportBookKey) return;
@@ -489,6 +511,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     { tooltipText: _('Dictionary'), Icon: TbHexagonLetterD, onClick: handleDictionary },
     { tooltipText: _('Wikipedia'), Icon: FaWikipediaW, onClick: handleWikipedia },
     { tooltipText: _('Translate'), Icon: BsTranslate, onClick: handleTranslation },
+    { tooltipText: _('AI Assistant'), Icon: FiMessageSquare, onClick: handleChatbot },
     { tooltipText: _('Speak'), Icon: FaHeadphones, onClick: handleSpeakText },
   ];
 
@@ -521,6 +544,17 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
           trianglePosition={trianglePosition}
           popupWidth={transPopupWidth}
           popupHeight={transPopupHeight}
+        />
+      )}
+      {showChatbotPopup && trianglePosition && chatbotPopupPosition && (
+        <ChatbotPopup
+          text={selection?.text as string}
+          position={chatbotPopupPosition}
+          trianglePosition={trianglePosition}
+          popupWidth={chatbotPopupWidth}
+          popupHeight={chatbotPopupHeight}
+          bookData={bookData}
+          view={view}
         />
       )}
       {showAnnotPopup && trianglePosition && annotPopupPosition && (

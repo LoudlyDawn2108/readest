@@ -83,6 +83,9 @@ export const DEFAULT_READSETTINGS: ReadSettings = {
   autohideCursor: true,
   translationProvider: 'deepl',
   translateTargetLang: 'EN',
+  llmProvider: 'openai',
+  llmModel: 'gpt-4o-mini',
+  llmApiKey: '',
 
   customThemes: [],
   highlightStyle: 'highlight',
